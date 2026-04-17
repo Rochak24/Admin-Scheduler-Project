@@ -56,7 +56,7 @@ def get_week_label(week):
 
 
 # -----------------------------
-# ✅ GLOBAL WEEK GROUPS (FIXED)
+# GLOBAL WEEK GROUPS
 # -----------------------------
 def get_week_groups():
     week_13 = sorted(
@@ -96,10 +96,11 @@ def find_available(day, start_time, end_time, week):
         ] = "available"
 
         # -------------------------
-        # BLOCK CHECK
+        # 🚨 FIXED BLOCK CHECK
+        # ONLY "unavailable" blocks now
         # -------------------------
         blocked = person[
-            (person["type"].isin(["unavailable", "weekly_work"])) &
+            (person["type"] == "unavailable") &
             (person["start"] < end_time) &
             (person["end"] > start_time)
         ]
@@ -120,6 +121,9 @@ def find_available(day, start_time, end_time, week):
         if match.empty:
             continue
 
+        # -------------------------
+        # FORMAT TIMES
+        # -------------------------
         times = [
             f"{row['start'].strftime('%I:%M %p')} - {row['end'].strftime('%I:%M %p')}"
             for _, row in available_blocks.iterrows()
@@ -144,7 +148,7 @@ def index():
     selected_info = None
     error = None
 
-    # ✅ ALWAYS GET WEEK GROUPS
+    # Always show week groups
     week_13, week_24 = get_week_groups()
 
     if request.method == "POST":
@@ -164,9 +168,7 @@ def index():
             week = week_of_month(date)
             week_label = get_week_label(week)
 
-            # -------------------------
-            # AVAILABILITY
-            # -------------------------
+            # Get availability
             people = find_available(day, start_time, end_time, week)
 
             selected_info = {
@@ -176,9 +178,7 @@ def index():
                 "week": week_label
             }
 
-            # -------------------------
-            # ROLE SPLIT
-            # -------------------------
+            # Role split
             role_map = roles.set_index("name")["role"].to_dict()
 
             for p in people:
@@ -208,4 +208,7 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000))
+    )
