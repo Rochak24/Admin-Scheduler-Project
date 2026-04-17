@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Admin Scheduler</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+/* GLOBAL */
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #eef2ff, #f8fafc);
+    margin: 0;
+    padding: 40px;
+    color: #1e293b;
+}
+
+/* CONTAINER */
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 35px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* TITLE */
+h1 {
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+/* LABEL */
+label {
+    font-weight: 500;
+    margin-top: 15px;
+    display: block;
+}
+
+/* INPUTS */
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 6px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+input:focus, select:focus {
+    border-color: #6366f1;
+    outline: none;
+}
+
+/* BUTTON */
+button {
+    margin-top: 20px;
+    width: 100%;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(99,102,241,0.3);
+}
+
+/* SELECTED BOX */
+.selected-box {
+    margin-top: 25px;
+    padding: 18px;
+    border-radius: 12px;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    font-size: 14px;
+}
+
+/* SECTION TITLES */
+h2 {
+    margin-top: 30px;
+    font-weight: 600;
+}
+
+/* PERSON CARD */
+.person {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 15px;
+    margin-top: 10px;
+    border-radius: 10px;
+    transition: 0.2s;
+}
+
+.person:hover {
+    transform: scale(1.01);
+    background: #f1f5f9;
+}
+
+/* NAME */
+.person strong {
+    font-size: 16px;
+    color: #1e293b;
+}
+
+/* ERROR */
+.error {
+    color: #dc2626;
+    margin-top: 10px;
+}
+
+/* EMPTY */
+.empty {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* NEW WEEK SECTION */
+.week-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.week-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Team Admin Scheduler</h1>
+
+    <form method="POST">
+
+        <label>Date</label>
+        <input type="date" name="date" value="{{ request.form.date }}" required>
+
+        {% set times = [
+        "07:00 AM","07:30 AM","08:00 AM","08:30 AM","09:00 AM","09:30 AM",
+        "10:00 AM","10:30 AM","11:00 AM","11:30 AM","12:00 PM","12:30 PM",
+        "01:00 PM","01:30 PM","02:00 PM","02:30 PM","03:00 PM","03:30 PM",
+        "04:00 PM","04:30 PM","05:00 PM","05:30 PM","06:00 PM","06:30 PM",
+        "07:00 PM","07:30 PM","08:00 PM","08:30 PM","09:00 PM","09:30 PM",
+        "10:00 PM","10:30 PM","11:00 PM"] %}
+
+        <label>Start Time</label>
+        <select name="start" required>
+            {% for t in times %}
+            <option value="{{ t }}" {% if request.form.start == t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+        </select>
+
+        <label>End Time</label>
+        <select name="end" required>
+            {% for t in times %}
+            <option value="{{ t }}" {% if request.form.end == t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Check Availability</button>
+
+    </form>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if selected %}
+    <div class="selected-box">
+        📅 <strong>{{ selected.date }}</strong><br>
+        🗓 {{ selected.week }}<br>
+        ⏰ {{ selected.start }} - {{ selected.end }}
+    </div>
+    {% endif %}
+
+    <!-- SENIORS -->
+    <h2>Available Seniors</h2>
+    {% if seniors %}
+        {% for s in seniors %}
+        <div class="person">
+            <strong>{{ s.name }}</strong><br>
+            {{ s.times | join(", ") }}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty">No seniors available</div>
+    {% endif %}
+
+    <!-- CREW -->
+    <h2>Available Crew</h2>
+    {% if crew %}
+        {% for c in crew %}
+        <div class="person">
+            <strong>{{ c.name }}</strong><br>
+            {{ c.times | join(", ") }}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty">No crew available</div>
+    {% endif %}
+
+    <!-- ✅ NEW SECTION -->
+    <div class="week-section">
+        <h2>Week-Based Crew Info</h2>
+
+        <div class="person">
+            <div class="week-title">1st & 3rd Week Crew</div>
+            {% if week_13 %}
+                {{ week_13 | join(", ") }}
+            {% else %}
+                <span class="empty">No crew</span>
+            {% endif %}
+        </div>
+
+        <div class="person">
+            <div class="week-title">2nd & 4th Week Crew</div>
+            {% if week_24 %}
+                {{ week_24 | join(", ") }}
+            {% else %}
+                <span class="empty">No crew</span>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
